@@ -1,44 +1,34 @@
 use dotenv::dotenv;
-use oxotly_bot::{configuration::load_configuration, utils::Command};
+use oxotly_bot::commands;
+use oxotly_bot::configuration::BotInterface;
 use teloxide::prelude::*;
-use teloxide::utils::command::BotCommands;
-
-async fn hello_command(bot: Bot, msg: Message) -> Result<Message, teloxide::RequestError> {
-    bot.send_message(
-        msg.chat.id,
-        format!("hello @{}", msg.from().unwrap().username.as_ref().unwrap()),
-    )
-    .await
-}
-
-// TODO check if valid for images
-async fn get_comic(bot: Bot, msg: Message) -> Result<Message, teloxide::RequestError> {
-    unimplemented!()
-}
-
-async fn answer_handler(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
-    match cmd {
-        Command::Help => {
-            bot.send_message(msg.chat.id, Command::descriptions().to_string())
-                .await?
-        }
-        Command::Hello => hello_command(bot, msg).await?,
-        Command::XKCD => get_comic(bot, msg).await?,
-    };
-
-    Ok(())
-}
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
     env_logger::init();
-    let settings = load_configuration().expect("failed to load configs");
-
-    println!("{:?}", settings);
-
     log::info!("Starting Oxotly Bot...");
 
-    let bot = Bot::new(settings.token);
-    Command::repl(bot, answer_handler).await;
+    let bot_interface = BotInterface::new().expect("failed to create BotInterface");
+
+    println!("{:?}", &bot_interface);
+
+    let bot = &bot_interface.bot;
+    Dispatcher::builder(bot.clone(), commands::schema())
+        // Here you specify initial dependencies that all handlers will receive; they can be
+        // database connections, configurations, and other auxiliary arguments. It is similar to
+        // `actix_web::Extensions`.
+        .dependencies(dptree::deps![bot_interface.clone()])
+        // If no handler succeeded to handle an update, this closure will be called.
+        .default_handler(|upd| async move {
+            log::warn!("Unhandled update: {:?}", upd);
+        })
+        // If the dispatcher fails for some reason, execute this handler.
+        .error_handler(LoggingErrorHandler::with_custom_text(
+            "An error has occurred in the dispatcher",
+        ))
+        .enable_ctrlc_handler()
+        .build()
+        .dispatch()
+        .await;
 }
