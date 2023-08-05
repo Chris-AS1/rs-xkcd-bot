@@ -1,10 +1,7 @@
-use oxotly_bot::configuration::BotInterface;
+use oxotly_bot::{configuration::BotSettings, utils::build_settings};
 
 #[tokio::test]
-async fn create_bot_from_token() {
-    let bot_interface = BotInterface::new().expect("failed to create BotInterface");
-    let bot = bot_interface.bot;
-
-    // println!("{:?}", bot);
-    assert_eq!(bot.token(), bot_interface.bot_settings.token)
+async fn load_token_from_config() {
+    let settings: BotSettings = build_settings();
+    assert!(settings.token.len() > 0, "token is zero-length");
 }
