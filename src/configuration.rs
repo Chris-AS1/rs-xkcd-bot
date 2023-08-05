@@ -1,13 +1,8 @@
-use config::{Config, ConfigError, File, FileFormat};
+use crate::errors::Error;
+use anyhow::Context;
+use config::{Config, File, FileFormat};
 use serde::Deserialize;
 use serde::Serialize;
-use teloxide::Bot;
-
-#[derive(Debug, Clone)]
-pub struct BotInterface {
-    pub bot: Bot,
-    pub bot_settings: BotSettings,
-}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BotSettings {
@@ -17,27 +12,8 @@ pub struct BotSettings {
     pub test: String,
 }
 
-impl BotInterface {
-    pub fn new() -> Result<BotInterface, ConfigError> {
-        let bot_settings = BotInterface::load_configuration()?;
-        let bot = Bot::new(&bot_settings.token);
-
-        Ok(Self { bot, bot_settings })
-    }
-
-    pub fn from_param(token: String) -> Result<BotInterface, ConfigError> {
-        let bot_settings = BotInterface::load_configuration()?;
-        let bot = Bot::new(token);
-
-        Ok(Self { bot, bot_settings })
-    }
-
-    pub fn load_configuration() -> Result<BotSettings, ConfigError> {
-        match std::env::var("APP_ENV") {
-            Ok(v) => v.try_into().unwrap_or_else(|_| Environment::Development),
-            Err(_) => Environment::Development,
-        };
-
+impl BotSettings {
+    pub fn new() -> Result<BotSettings, Error> {
         let environment: Environment = std::env::var("APP_ENV")
             .unwrap_or_else(|_| Environment::Production.as_str().into())
             .try_into()
@@ -50,7 +26,14 @@ impl BotInterface {
             FileFormat::Yaml,
         ));
 
-        builder.build()?.try_deserialize()
+        match builder
+            .build()
+            .context("failed to build configs")?
+            .try_deserialize()
+        {
+            Ok(settings) => Ok(settings),
+            Err(_) => Err(Error::ConfigError),
+        }
     }
 }
 

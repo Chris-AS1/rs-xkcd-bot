@@ -1,8 +1,9 @@
-use crate::configuration::BotInterface;
-use crate::utils::get_random_comic;
 use teloxide::dispatching::DpHandlerDescription;
 use teloxide::utils::command::BotCommands;
 use teloxide::{prelude::*, RequestError};
+
+use crate::configuration::BotSettings;
+use crate::utils::get_random_comic;
 
 #[derive(BotCommands, Clone, PartialEq, Debug)]
 #[command(
@@ -35,8 +36,8 @@ pub fn schema() -> Handler<'static, DependencyMap, Result<(), RequestError>, DpH
 }
 
 async fn commands_handler(
-    bot_interface: BotInterface,
     bot: Bot,
+    settings: BotSettings,
     msg: Message,
     cmd: Command,
 ) -> Result<(), RequestError> {
@@ -47,7 +48,7 @@ async fn commands_handler(
             tmp = format!("hello @{}", msg.from().unwrap().username.as_ref().unwrap());
             tmp
         }
-        Command::XKCD => match get_random_comic(bot_interface).await {
+        Command::XKCD => match get_random_comic(settings).await {
             Ok(link) => {
                 tmp = link;
                 tmp
