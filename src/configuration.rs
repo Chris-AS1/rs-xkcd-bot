@@ -13,6 +13,7 @@ pub struct BotInterface {
 pub struct BotSettings {
     pub token: String,
     pub xkcd_url: String,
+    pub user_agent: String,
     pub test: String,
 }
 

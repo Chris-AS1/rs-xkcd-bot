@@ -40,14 +40,20 @@ async fn commands_handler(
     msg: Message,
     cmd: Command,
 ) -> Result<(), RequestError> {
-    let tmp;
-    let text = match cmd {
-        Command::Help => "help",
+    let tmp: String;
+    let text: String = match cmd {
+        Command::Help => format!("{}", Command::descriptions()),
         Command::Hello => {
             tmp = format!("hello @{}", msg.from().unwrap().username.as_ref().unwrap());
-            tmp.as_str()
+            tmp
         }
-        Command::XKCD => get_random_comic(bot_interface),
+        Command::XKCD => match get_random_comic(bot_interface).await {
+            Ok(link) => {
+                tmp = link;
+                tmp
+            }
+            Err(_) => "there has been an error".into(),
+        },
     };
 
     bot.send_message(msg.chat.id, text).await?;
