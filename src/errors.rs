@@ -7,4 +7,6 @@ pub enum Error {
     UnexpectedError(#[from] anyhow::Error),
     #[error("link hasn't been found in the parsed page")]
     LinkNotFoundError,
+    #[error("rip configs")]
+    ConfigError
 }
