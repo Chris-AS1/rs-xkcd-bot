@@ -5,6 +5,11 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct DatabaseSettings {
+    pub url: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct BotSettings {
     pub token: String,
     pub xkcd_url: String,
@@ -25,6 +30,9 @@ impl BotSettings {
             format!("config/{}", environment.as_str()).as_str(),
             FileFormat::Yaml,
         ));
+
+        // allows to override config variables from env. eg. APP__TOKEN
+        builder = builder.add_source(config::Environment::default().prefix("APP").separator("__"));
 
         match builder
             .build()

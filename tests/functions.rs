@@ -12,3 +12,10 @@ async fn obtain_comic_link() {
         "a link to the comic hasn't been found"
     );
 }
+
+#[ignore]
+#[test]
+fn token_overwritten_by_env() {
+    let settings = build_settings();
+    assert_eq!("asd", settings.token);
+}
