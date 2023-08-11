@@ -3,6 +3,7 @@ use anyhow::Context;
 use config::{Config, File, FileFormat};
 use serde::Deserialize;
 use serde::Serialize;
+use strum_macros::EnumIter;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
@@ -12,7 +13,8 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct DatabaseSettings {
-    pub url: String,
+    pub host: String,
+    pub port: u16,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -51,12 +53,23 @@ impl Settings {
     }
 }
 
-enum Environment {
+impl DatabaseSettings {
+    pub fn get_url(&self) -> String {
+        format!("redis://{}:{}", &self.host, &self.port)
+    }
+}
+
+#[derive(Debug, EnumIter)]
+pub enum Environment {
     Development,
     Production,
 }
 
 impl Environment {
+    pub fn to_string(&self) -> String {
+        String::from(self.as_str())
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Environment::Development => "development",
@@ -71,7 +84,7 @@ impl TryFrom<String> for Environment {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             "development" | "dev" => Ok(Self::Development),
-            "production"  | "prod" => Ok(Self::Production),
+            "production" | "prod" => Ok(Self::Production),
             o => Err(format!(
                 "{} is not a supported environment mode. Use `development` or `production`",
                 o
