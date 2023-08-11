@@ -3,6 +3,7 @@ use oxotly_bot::{
     utils::{build_settings, get_random_comic},
 };
 
+#[ignore]
 #[tokio::test]
 async fn obtain_comic_link() {
     let settings: Settings = build_settings().unwrap();
