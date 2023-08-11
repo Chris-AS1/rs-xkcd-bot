@@ -1,4 +1,5 @@
 use anyhow;
+use config::ConfigError;
 use thiserror;
 
 #[derive(Debug, thiserror::Error)]
@@ -7,6 +8,6 @@ pub enum Error {
     UnexpectedError(#[from] anyhow::Error),
     #[error("link hasn't been found in the parsed page")]
     LinkNotFoundError,
-    #[error("rip configs")]
-    ConfigError
+    #[error(transparent)]
+    ConfigError(#[from] ConfigError),
 }

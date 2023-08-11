@@ -1,14 +1,14 @@
 use oxotly_bot::{
-    configuration::BotSettings,
+    configuration::Settings,
     utils::{build_settings, get_random_comic},
 };
 
 #[tokio::test]
 async fn obtain_comic_link() {
-    let settings: BotSettings = build_settings();
+    let settings: Settings = build_settings().unwrap();
 
     assert!(
-        get_random_comic(settings).await.is_ok(),
+        get_random_comic(settings.bot).await.is_ok(),
         "a link to the comic hasn't been found"
     );
 }
@@ -16,6 +16,6 @@ async fn obtain_comic_link() {
 #[ignore]
 #[test]
 fn token_overwritten_by_env() {
-    let settings = build_settings();
-    assert_eq!("asd", settings.token);
+    let settings: Settings = build_settings().unwrap();
+    assert_eq!("asd", settings.bot.token);
 }

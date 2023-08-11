@@ -1,4 +1,4 @@
-use crate::{commands, configuration::BotSettings, errors};
+use crate::{commands, configuration::BotSettings, configuration::Settings, errors};
 use anyhow::Context;
 use html5ever::driver::{self, ParseOpts};
 use reqwest::{self, header::USER_AGENT};
@@ -6,11 +6,12 @@ use scraper::{Html, Selector};
 use teloxide::prelude::*;
 use tendril::TendrilSink;
 
-pub fn build_settings() -> BotSettings {
-    let settings = BotSettings::new().expect("failed on creating a BotSettings instance");
+pub fn build_settings() -> Result<Settings, errors::Error> {
+    // let settings = BotSettings::new().expect("failed on creating a BotSettings instance");
+    let settings = Settings::new()?;
     println!("loaded following settings: {:#?}", &settings);
 
-    settings
+    Ok(settings)
 }
 
 pub fn build_bot(
@@ -34,13 +35,13 @@ pub fn build_bot(
 }
 
 pub async fn spawn() {
-    let settings = build_settings();
-    let mut bot = build_bot(settings);
+    let settings = build_settings().unwrap();
+    let mut bot = build_bot(settings.bot);
     bot.dispatch().await;
 }
 
-pub async fn spawn_from_settings(settings: BotSettings) {
-    let mut bot = build_bot(settings);
+pub async fn spawn_from_settings(settings: Settings) {
+    let mut bot = build_bot(settings.bot);
     bot.dispatch().await;
 }
 

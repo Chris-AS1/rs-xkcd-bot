@@ -5,6 +5,12 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Settings {
+    pub database: DatabaseSettings,
+    pub bot: BotSettings,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct DatabaseSettings {
     pub url: String,
 }
@@ -17,8 +23,8 @@ pub struct BotSettings {
     pub test: String,
 }
 
-impl BotSettings {
-    pub fn new() -> Result<BotSettings, Error> {
+impl Settings {
+    pub fn new() -> Result<Settings, Error> {
         let environment: Environment = std::env::var("APP_ENV")
             .unwrap_or_else(|_| Environment::Production.as_str().into())
             .try_into()
@@ -40,7 +46,7 @@ impl BotSettings {
             .try_deserialize()
         {
             Ok(settings) => Ok(settings),
-            Err(_) => Err(Error::ConfigError),
+            Err(e) => Err(Error::ConfigError(e)),
         }
     }
 }
@@ -64,8 +70,8 @@ impl TryFrom<String> for Environment {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
-            "development" => Ok(Self::Development),
-            "production" => Ok(Self::Production),
+            "development" | "dev" => Ok(Self::Development),
+            "production"  | "prod" => Ok(Self::Production),
             o => Err(format!(
                 "{} is not a supported environment mode. Use `development` or `production`",
                 o
