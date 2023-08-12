@@ -1,10 +1,8 @@
-use dotenv::dotenv;
-use oxotly_bot::utils::spawn;
+use oxotly_bot::utils::{spawn, setup};
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
-    env_logger::init();
+    setup();
     log::info!("Starting Oxotly Bot...");
 
     spawn().await;

@@ -1,8 +1,10 @@
 use oxotly_bot::database::connect;
+use oxotly_bot::utils::setup;
 use redis::Commands;
 
 #[test]
 fn redis_connection() {
+    setup();
     connect().unwrap();
 }
 

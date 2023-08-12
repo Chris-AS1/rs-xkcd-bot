@@ -1,13 +1,23 @@
 use crate::{commands, configuration::BotSettings, configuration::Settings, errors};
 use anyhow::Context;
+use dotenv::dotenv;
 use html5ever::driver::{self, ParseOpts};
 use reqwest::{self, header::USER_AGENT};
 use scraper::{Html, Selector};
+use std::sync::Once;
 use teloxide::prelude::*;
 use tendril::TendrilSink;
 
+static INIT: Once = Once::new();
+
+pub fn setup() {
+    INIT.call_once(|| {
+        dotenv().ok();
+        env_logger::init();
+    });
+}
+
 pub fn build_settings() -> Result<Settings, errors::Error> {
-    // let settings = BotSettings::new().expect("failed on creating a BotSettings instance");
     let settings = Settings::new()?;
     println!("loaded following settings: {:#?}", &settings);
 
@@ -64,7 +74,6 @@ pub async fn get_random_comic(settings: BotSettings) -> Result<String, errors::E
     let a = html.select(&selector);
 
     for element in a {
-        println!("{:#?}", element.value());
         let src: Vec<(&str, &str)> = element
             .value()
             .attrs()
@@ -72,7 +81,6 @@ pub async fn get_random_comic(settings: BotSettings) -> Result<String, errors::E
             .collect();
 
         if let Some((_, link)) = src.first() {
-            println!("{:#?}", link);
             return Ok(format!("https:{}", link).to_string());
         };
     }
