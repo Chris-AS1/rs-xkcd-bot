@@ -1,15 +1,22 @@
-use crate::{commands, configuration::BotSettings, configuration::Settings, errors};
+use crate::{
+    commands,
+    configuration::BotSettings,
+    configuration::Settings,
+    database::consume_daily,
+    errors::{self, Error},
+};
 use anyhow::Context;
 use dotenv::dotenv;
 use html5ever::driver::{self, ParseOpts};
 use reqwest::{self, header::USER_AGENT};
 use scraper::{Html, Selector};
-use std::sync::Once;
+use std::{future::Future, sync::Once};
 use teloxide::prelude::*;
 use tendril::TendrilSink;
 
 static INIT: Once = Once::new();
 
+// initializes env variables, used for correct logging
 pub fn setup() {
     INIT.call_once(|| {
         dotenv().ok();
@@ -25,9 +32,9 @@ pub fn build_settings() -> Result<Settings, errors::Error> {
 }
 
 pub fn build_bot(
-    settings: BotSettings,
+    settings: Settings,
 ) -> Dispatcher<Bot, teloxide::RequestError, teloxide::dispatching::DefaultKey> {
-    let bot = Bot::new(&settings.token);
+    let bot = Bot::new(&settings.bot.token);
 
     Dispatcher::builder(bot.clone(), commands::schema())
         // Here you specify initial dependencies that all handlers will receive; they can be
@@ -46,16 +53,33 @@ pub fn build_bot(
 
 pub async fn spawn() {
     let settings = build_settings().unwrap();
-    let mut bot = build_bot(settings.bot);
+    let mut bot = build_bot(settings);
     bot.dispatch().await;
 }
 
 pub async fn spawn_from_settings(settings: Settings) {
-    let mut bot = build_bot(settings.bot);
+    let mut bot = build_bot(settings);
     bot.dispatch().await;
 }
 
-pub async fn get_random_comic(settings: BotSettings) -> Result<String, errors::Error> {
+pub async fn rate_limit_wrapper<F, Fut>(
+    f: F,
+    con: redis::Connection,
+    settings: Settings,
+    username: String,
+) -> Result<std::string::String, errors::Error>
+where
+    F: FnOnce(BotSettings) -> Fut,
+    Fut: Future<Output = Result<String, Error>>,
+{
+    if consume_daily(con, settings.clone(), username).is_err() {
+        return Err(Error::RateLimitError);
+    }
+
+    f(settings.bot).await
+}
+
+pub async fn get_random_comic(settings: BotSettings) -> Result<String, Error> {
     let client = reqwest::Client::new();
 
     let body = client

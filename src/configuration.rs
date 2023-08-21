@@ -15,6 +15,8 @@ pub struct Settings {
 pub struct DatabaseSettings {
     pub host: String,
     pub port: u16,
+    pub retry_timeout: u64,
+    pub rate_limit: u64,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

@@ -1,9 +1,9 @@
+use crate::configuration::Settings;
+use crate::database::connect;
+use crate::utils::{get_random_comic, rate_limit_wrapper};
 use teloxide::dispatching::DpHandlerDescription;
 use teloxide::utils::command::BotCommands;
 use teloxide::{prelude::*, RequestError};
-
-use crate::configuration::BotSettings;
-use crate::utils::get_random_comic;
 
 #[derive(BotCommands, Clone, PartialEq, Debug)]
 #[command(
@@ -35,9 +35,10 @@ pub fn schema() -> Handler<'static, DependencyMap, Result<(), RequestError>, DpH
     handler
 }
 
+// TODO: wrap get_random_comic into a function for rate limiting
 async fn commands_handler(
     bot: Bot,
-    settings: BotSettings,
+    settings: Settings,
     msg: Message,
     cmd: Command,
 ) -> Result<(), RequestError> {
@@ -48,12 +49,23 @@ async fn commands_handler(
             tmp = format!("hello @{}", msg.from().unwrap().username.as_ref().unwrap());
             tmp
         }
-        Command::XKCD => match get_random_comic(settings).await {
+        Command::XKCD => match rate_limit_wrapper(
+            get_random_comic,
+            connect().unwrap(),
+            settings,
+            msg.from().unwrap().username.as_ref().unwrap().to_string(),
+        )
+        .await
+        {
+            // Command::XKCD => match get_random_comic(settings).await {
             Ok(link) => {
                 tmp = link;
                 tmp
             }
-            Err(_) => "there has been an error".into(),
+            Err(e) => {
+                log::error!("{:?}", e);
+                "there has been an error".into()
+            }
         },
     };
 

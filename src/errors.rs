@@ -10,4 +10,6 @@ pub enum Error {
     LinkNotFoundError,
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
+    #[error("user is currently rate limited")]
+    RateLimitError,
 }

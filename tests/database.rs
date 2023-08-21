@@ -1,6 +1,8 @@
-use oxotly_bot::database::connect;
-use oxotly_bot::utils::setup;
+use oxotly_bot::configuration::Settings;
+use oxotly_bot::database::{connect, consume_daily};
+use oxotly_bot::utils::{build_settings, setup};
 use redis::Commands;
+use uuid::Uuid;
 
 #[test]
 fn redis_connection() {
@@ -17,4 +19,15 @@ fn redis_set_read_delete_value() {
     let _: () = con.del("foo").unwrap();
 
     assert_eq!(42, result);
+}
+
+#[test]
+fn rate_limit_user() {
+    setup();
+    let con = connect().unwrap();
+    let settings: Settings = build_settings().unwrap();
+    let username = format!("{}", Uuid::new_v4()).to_string();
+
+    let res = consume_daily(con, settings, username);
+    assert!(res.is_ok())
 }
