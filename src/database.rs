@@ -28,8 +28,8 @@ pub fn connect() -> Result<redis::Connection, Error> {
 }
 
 pub fn consume_daily(
-    mut con: redis::Connection,
-    settings: Settings,
+    con: &mut redis::Connection,
+    settings: &Settings,
     username: String,
 ) -> Result<(), Error> {
     let is_limited: bool = con.exists(username.clone()).unwrap();

@@ -51,7 +51,7 @@ async fn commands_handler(
         }
         Command::XKCD => match rate_limit_wrapper(
             get_random_comic,
-            connect().unwrap(),
+            &mut connect().unwrap(),
             settings,
             msg.from().unwrap().username.as_ref().unwrap().to_string(),
         )

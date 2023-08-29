@@ -64,7 +64,7 @@ pub async fn spawn_from_settings(settings: Settings) {
 
 pub async fn rate_limit_wrapper<F, Fut>(
     f: F,
-    con: redis::Connection,
+    con: &mut redis::Connection,
     settings: Settings,
     username: String,
 ) -> Result<std::string::String, errors::Error>
@@ -72,7 +72,7 @@ where
     F: FnOnce(BotSettings) -> Fut,
     Fut: Future<Output = Result<String, Error>>,
 {
-    if consume_daily(con, settings.clone(), username).is_err() {
+    if consume_daily(con, &settings, username).is_err() {
         return Err(Error::RateLimitError);
     }
 

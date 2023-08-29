@@ -24,10 +24,13 @@ fn redis_set_read_delete_value() {
 #[test]
 fn rate_limit_user() {
     setup();
-    let con = connect().unwrap();
+    let mut con = connect().unwrap();
     let settings: Settings = build_settings().unwrap();
     let username = format!("{}", Uuid::new_v4()).to_string();
 
-    let res = consume_daily(con, settings, username);
-    assert!(res.is_ok())
+    let mut res = consume_daily(&mut con, &settings, username.clone());
+    assert!(res.is_ok());
+
+    res = consume_daily(&mut con, &settings, username);
+    assert!(res.is_err())
 }
