@@ -35,7 +35,6 @@ pub fn schema() -> Handler<'static, DependencyMap, Result<(), RequestError>, DpH
     handler
 }
 
-// TODO: wrap get_random_comic into a function for rate limiting
 async fn commands_handler(
     bot: Bot,
     settings: Settings,
@@ -57,14 +56,13 @@ async fn commands_handler(
         )
         .await
         {
-            // Command::XKCD => match get_random_comic(settings).await {
             Ok(link) => {
                 tmp = link;
                 tmp
             }
             Err(e) => {
                 log::error!("{:?}", e);
-                "there has been an error".into()
+                "you've already got your daily comic!!".into()
             }
         },
     };
