@@ -12,7 +12,7 @@ After that the container image can be built, for simplicity let's use docker com
 docker compose build
 ```
 
-To run the whole stack use
+To run the whole stack use:
 ```bash
 docker compose up
 ```
