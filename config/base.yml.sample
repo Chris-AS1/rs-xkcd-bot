@@ -1,0 +1,6 @@
+database:
+  retry_timeout: 5
+bot:
+  token: ""
+  xkcd_url: "https://c.xkcd.com/random/comic/"
+  user_agent: ""

@@ -1,0 +1,6 @@
+database:
+  host: "redis"
+  port: 6379
+  rate_limit: 86400
+bot:
+  test: "dev"
